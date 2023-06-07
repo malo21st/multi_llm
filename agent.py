@@ -2,6 +2,7 @@ from langchain import OpenAI
 from langchain.agents import create_pandas_dataframe_agent
 import pandas as pd
 import streamlit as st
+import codecs
 
 # Setting up the api key
 # import environ
@@ -31,7 +32,7 @@ def create_agent(filename: str):
         df = pd.read_csv(filename)
     except Exception:
         pass
-    df = pd.read_csv(filename, encoding='shift-jis')
+    df = pd.read_csv(filename, encoding='shift_jis')
 #     try:
 #         df = pd.read_csv(filename, encoding='shift_jis')
 #     except Exception:
