@@ -31,10 +31,11 @@ def create_agent(filename: str):
         df = pd.read_csv(filename)
     except Exception:
         pass
-    try:
-        df = pd.read_csv(filename, encoding='shift_jis')
-    except Exception:
-        df = pd.DataFrame()
+    df = pd.read_csv(filename, encoding='shift_jis')
+#     try:
+#         df = pd.read_csv(filename, encoding='shift_jis')
+#     except Exception:
+#         df = pd.DataFrame()
 
     # Create a Pandas DataFrame agent.
     return create_pandas_dataframe_agent(llm, df, verbose=False)
