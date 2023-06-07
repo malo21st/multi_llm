@@ -9,7 +9,7 @@ import streamlit as st
 # env = environ.Env()
 # environ.Env.read_env()
 
-API_KEY = st.seacret["apikey"] # env("apikey")
+API_KEY = st.secrets["apikey"] # env("apikey")
 
 
 def create_agent(filename: str):
