@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import os
 
 from agent import query_agent, create_agent
 
@@ -57,13 +58,14 @@ st.title("👨‍💻 Chat with your CSV")
 
 st.write("Please upload your CSV file below.")
 
-data = st.file_uploader("Upload a CSV")
+upload_file = st.file_uploader("Upload a CSV")
+data_path = os.path.join(app.config["UPLOAD_FOLDER1"], upload_file.filename)
 
 query = st.text_area("Insert your query")
 
 if st.button("Submit Query", type="primary"):
     # Create an agent from the CSV file.
-    agent = create_agent(data)
+    agent = create_agent(data_path)
 
     # Query the agent.
     response = query_agent(agent=agent, query=query)
