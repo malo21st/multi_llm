@@ -27,7 +27,14 @@ def create_agent(filename: str):
     llm = OpenAI(openai_api_key=API_KEY)
 
     # Read the CSV file into a Pandas DataFrame.
-    df = pd.read_csv(filename)
+    try:
+        df = pd.read_csv(filename)
+    except Exception:
+        pass
+    try:
+        df = pd.read_csv(filename, encoding='shift_jis')
+    except Exception:
+        print(Exception)
 
     # Create a Pandas DataFrame agent.
     return create_pandas_dataframe_agent(llm, df, verbose=False)
