@@ -34,7 +34,7 @@ def create_agent(filename: str):
     try:
         df = pd.read_csv(filename, encoding='shift_jis')
     except Exception:
-        print(Exception)
+        df = pd.DataFrame()
 
     # Create a Pandas DataFrame agent.
     return create_pandas_dataframe_agent(llm, df, verbose=False)
