@@ -1,67 +1,75 @@
 import streamlit as st
-import openai
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-import os
+import pandas as pd
+import json
 
-openai.api_key = st.secrets['api_key']
+from agent import query_agent, create_agent
 
-if "qa" not in st.session_state:
-    st.session_state.qa = {"pdf": "", "history": []}
 
-def store_del_msg():
-    st.session_state.qa["history"].append({"role": "Q", "msg": st.session_state.user_input}) # store
-    st.session_state.user_input = ""  # del
+def decode_response(response: str) -> dict:
+    """This function converts the string response from the model to a dictionary object.
 
-if "messages" not in st.session_state:
-    st.session_state["messages"] = [
-        {"role": "system", "content": "あなたは優秀なアシスタントAIです。"}
-        ]
+    Args:
+        response (str): response from the model
 
-# チャットボットとやりとりする関数
-def communicate():
-    messages = st.session_state["messages"]
+    Returns:
+        dict: dictionary with response data
+    """
+    return json.loads(response)
 
-    user_message = {"role": "user", "content": st.session_state["user_input"]}
-    messages.append(user_message)
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages
-    )  
+def write_response(response_dict: dict):
+    """
+    Write a response from an agent to a Streamlit app.
 
-    bot_message = response["choices"][0]["message"]
-    messages.append(bot_message)
+    Args:
+        response_dict: The response from the agent.
 
-    st.session_state["user_input"] = ""  # 入力欄を消去
+    Returns:
+        None.
+    """
 
-# View (User Interface)
-## Sidebar
-st.sidebar.title("タイトル未定")
-user_input = st.sidebar.text_input("ご質問をどうぞ", key="user_input", on_change=store_del_msg)
-## Main Content
-if st.session_state.qa["history"]:
-    for message in st.session_state.qa["history"]:
-        if message["role"] == "Q": # Q: Question (User)
-            st.info(message["msg"])
-        elif message["role"] == "A": # A: Answer (AI Assistant)
-            st.success(message["msg"])
-        elif message["role"] == "E": # E: Error
-            st.error(message["msg"])
-chat_box = st.empty() # Streaming message
+    # Check if the response is an answer.
+    if "answer" in response_dict:
+        st.write(response_dict["answer"])
 
-# Model (Business Logic)
+    # Check if the response is a bar chart.
+    if "bar" in response_dict:
+        data = response_dict["bar"]
+        df = pd.DataFrame(data)
+        df.set_index("columns", inplace=True)
+        st.bar_chart(df)
 
-if st.session_state.qa["history"]:
-    query = st.session_state.qa["history"][-1]["msg"]
-    try:
-        response = engine.query(query) # Query to ChatGPT
-        text = ""
-        for next in response.response_gen:
-            text += next
-            chat_box.success(text)
-            st.session_state.qa["history"].append({"role": "A", "msg": text})
-    except Exception as error_msg:
-#             error_msg = "エラーが発生しました！　もう一度、質問して下さい。"
-        st.error(error_msg)
-        st.session_state.qa["history"].append({"role": "E", "msg": error_msg})
+    # Check if the response is a line chart.
+    if "line" in response_dict:
+        data = response_dict["line"]
+        df = pd.DataFrame(data)
+        df.set_index("columns", inplace=True)
+        st.line_chart(df)
+
+    # Check if the response is a table.
+    if "table" in response_dict:
+        data = response_dict["table"]
+        df = pd.DataFrame(data["data"], columns=data["columns"])
+        st.table(df)
+
+
+st.title("👨‍💻 Chat with your CSV")
+
+st.write("Please upload your CSV file below.")
+
+data = st.file_uploader("Upload a CSV")
+
+query = st.text_area("Insert your query")
+
+if st.button("Submit Query", type="primary"):
+    # Create an agent from the CSV file.
+    agent = create_agent(data)
+
+    # Query the agent.
+    response = query_agent(agent=agent, query=query)
+
+    # Decode the response.
+    decoded_response = decode_response(response)
+
+    # Write the response to the Streamlit app.
+    write_response(decoded_response)
