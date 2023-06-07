@@ -39,6 +39,7 @@ def create_agent(filename: str):
 #         df = pd.DataFrame()
 
     # Create a Pandas DataFrame agent.
+    df.head()
     return create_pandas_dataframe_agent(llm, df, verbose=False)
 
 
